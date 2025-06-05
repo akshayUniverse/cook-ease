@@ -1,3 +1,27 @@
+# CookEase - Personalized Recipe App
+
+![CookEase Logo](public/favicon.ico)
+
+CookEase is a personalized recipe and nutrition app that helps users discover recipes tailored to their preferences, dietary restrictions, and nutritional goals.
+
+## Features
+
+- **Personalized Recipe Recommendations**: Get recipe suggestions based on your preferences and dietary needs
+- **Nutrition Tracking**: View detailed nutritional information for each recipe
+- **Recipe Search**: Find recipes by ingredients, cuisine, or meal type
+- **User Preferences**: Set dietary restrictions, allergies, and cuisine preferences
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+
+## Tech Stack
+
+- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
+- **Styling**: Tailwind CSS, Headless UI
+- **State Management**: React Context API
+- **Authentication**: Custom auth implementation (can be replaced with Auth0)
+- **API Integration**: Recipe and nutrition data APIs
+
+## Project Structure
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
 ## Getting Started
