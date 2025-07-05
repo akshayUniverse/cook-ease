@@ -1,0 +1,152 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String   // Hashed password
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // User preferences (stored as JSON)
+  dietaryRestrictions String @default("[]") // JSON: ["vegetarian", "vegan", "gluten-free"]
+  allergies          String @default("[]") // JSON: ["nuts", "shellfish", "dairy"]
+  cuisinePreferences String @default("[]") // JSON: ["italian", "mexican", "asian"]
+  skillLevel         String?  // "beginner", "intermediate", "advanced"
+  
+  // Relations
+  recipes        Recipe[]
+  savedRecipes   SavedRecipe[]
+  likes          Like[]
+  comments       Comment[]
+  following      Follow[] @relation("Follower")
+  followers      Follow[] @relation("Following")
+  messages       Message[]
+  
+  @@map("users")
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  image       String?
+  cookTime    Int      // minutes
+  servings    Int
+  difficulty  String   // "easy", "medium", "hard"
+  cuisine     String   // "italian", "mexican", etc.
+  mealType    String   // "breakfast", "lunch", "dinner", "snack"
+  
+  // Nutrition info
+  calories    Int
+  protein     Float
+  carbs       Float
+  fat         Float
+  fiber       Float?
+  sugar       Float?
+  sodium      Float?
+  
+  // Recipe content (stored as JSON)
+  ingredients String @default("[]") // JSON array of ingredient objects
+  instructions String @default("[]") // JSON array of step-by-step instructions
+  tags        String @default("[]") // JSON: ["quick", "healthy", "kid-friendly"]
+  
+  // Metadata
+  rating      Float    @default(4.5)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  
+  // Relations
+  savedBy     SavedRecipe[]
+  likes       Like[]
+  comments    Comment[]
+  
+  @@map("recipes")
+}
+
+model SavedRecipe {
+  id       String @id @default(cuid())
+  userId   String
+  recipeId String
+  savedAt  DateTime @default(now())
+  
+  user     User   @relation(fields: [userId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  
+  @@unique([userId, recipeId])
+  @@map("saved_recipes")
+}
+
+model Like {
+  id       String @id @default(cuid())
+  userId   String
+  recipeId String
+  likedAt  DateTime @default(now())
+  
+  user     User   @relation(fields: [userId], references: [id])
+  recipe   Recipe @relation(fields: [recipeId], references: [id])
+  
+  @@unique([userId, recipeId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  rating    Int?     // 1-5 star rating
+  createdAt DateTime @default(now())
+  userId    String
+  recipeId  String
+  
+  user      User     @relation(fields: [userId], references: [id])
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  
+  @@map("comments")
+}
+
+model Follow {
+  id          String @id @default(cuid())
+  followerId  String
+  followingId String
+  followedAt  DateTime @default(now())
+  
+  follower    User   @relation("Follower", fields: [followerId], references: [id])
+  following   User   @relation("Following", fields: [followingId], references: [id])
+  
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  senderId  String
+  receiverId String
+  read      Boolean  @default(false)
+  
+  sender    User     @relation(fields: [senderId], references: [id])
+  
+  @@map("messages")
+}
+
+model ShoppingList {
+  id        String   @id @default(cuid())
+  userId    String
+  item      String   // Individual shopping item
+  amount    String   // Amount/quantity
+  recipeId  String?  // Optional: which recipe this item is from
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@map("shopping_lists")
+} 

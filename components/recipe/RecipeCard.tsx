@@ -1,82 +1,154 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 interface RecipeCardProps {
   id: string;
   title: string;
-  image: string;
+  image?: string;
   price?: number;
   rating?: number;
-  cookTime?: string;
+  cookTime?: string | number;
   calories?: number;
+  cuisine?: string;
+  mealType?: string;
+  difficulty?: string;
 }
+
+// Function to get emoji and color based on recipe type
+const getRecipeEmoji = (title: string, cuisine?: string, mealType?: string) => {
+  const titleLower = title.toLowerCase();
+  
+  // Specific dish emojis
+  if (titleLower.includes('pizza')) return '🍕';
+  if (titleLower.includes('burger')) return '🍔';
+  if (titleLower.includes('pasta') || titleLower.includes('spaghetti')) return '🍝';
+  if (titleLower.includes('taco')) return '🌮';
+  if (titleLower.includes('sushi')) return '🍣';
+  if (titleLower.includes('soup')) return '🍲';
+  if (titleLower.includes('salad')) return '🥗';
+  if (titleLower.includes('sandwich')) return '🥪';
+  if (titleLower.includes('pancake')) return '🥞';
+  if (titleLower.includes('egg') || titleLower.includes('omelette')) return '🍳';
+  if (titleLower.includes('rice') || titleLower.includes('biryani')) return '🍚';
+  if (titleLower.includes('chicken')) return '🍗';
+  if (titleLower.includes('avocado')) return '🥑';
+  if (titleLower.includes('hummus')) return '🧆';
+  
+  // Cuisine-based emojis
+  if (cuisine) {
+    const cuisineLower = cuisine.toLowerCase();
+    if (cuisineLower.includes('italian')) return '🍝';
+    if (cuisineLower.includes('indian')) return '🍛';
+    if (cuisineLower.includes('mexican')) return '🌮';
+    if (cuisineLower.includes('asian')) return '🍜';
+    if (cuisineLower.includes('american')) return '🍔';
+    if (cuisineLower.includes('mediterranean')) return '🫒';
+    if (cuisineLower.includes('french')) return '🥖';
+  }
+  
+  // Meal type emojis
+  if (mealType) {
+    const mealTypeLower = mealType.toLowerCase();
+    if (mealTypeLower.includes('breakfast')) return '🥞';
+    if (mealTypeLower.includes('lunch')) return '🥗';
+    if (mealTypeLower.includes('dinner')) return '🍽️';
+  }
+  
+  // Default
+  return '🍽️';
+};
+
+const getRecipeColor = (cuisine?: string, mealType?: string) => {
+  if (cuisine) {
+    const cuisineLower = cuisine.toLowerCase();
+    if (cuisineLower.includes('italian')) return '#e8f5e8';
+    if (cuisineLower.includes('indian')) return '#fff5e6';
+    if (cuisineLower.includes('mexican')) return '#ffe6e6';
+    if (cuisineLower.includes('asian')) return '#f0f8ff';
+    if (cuisineLower.includes('american')) return '#fff0f0';
+    if (cuisineLower.includes('mediterranean')) return '#f0fff0';
+    if (cuisineLower.includes('french')) return '#f8f8ff';
+  }
+  
+  if (mealType) {
+    const mealTypeLower = mealType.toLowerCase();
+    if (mealTypeLower.includes('breakfast')) return '#fff8e1';
+    if (mealTypeLower.includes('lunch')) return '#e8f5e8';
+    if (mealTypeLower.includes('dinner')) return '#f3e5f5';
+  }
+  
+  return '#f5f5f5';
+};
 
 const RecipeCard: React.FC<RecipeCardProps> = ({
   id,
   title,
   image,
   price,
-  rating = 4.5,
-  cookTime = "20 min",
-  calories = 320,
+  rating,
+  cookTime,
+  calories,
+  cuisine,
+  mealType,
+  difficulty
 }) => {
+  const emoji = getRecipeEmoji(title, cuisine, mealType);
+  const bgColor = getRecipeColor(cuisine, mealType);
+  
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
-      <Link href={`/recipe/${id}`}>
-        <div className="relative h-40 w-full">
-          <Image
-            src={image}
-            alt={title}
-            fill
-            className="object-cover"
-          />
-          <button className="absolute top-2 right-2 bg-white dark:bg-gray-800 p-1.5 rounded-full">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-gray-400 hover:text-primary-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+    <Link href={`/recipe/${id}`}>
+      <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-4 cursor-pointer">
+        <div className="aspect-square w-full mb-3 rounded-lg overflow-hidden">
+          {image && !image.includes('placeholder') ? (
+            <img 
+              src={image} 
+              alt={title} 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div 
+              className="w-full h-full flex items-center justify-center"
+              style={{ backgroundColor: bgColor }}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="p-3">
-          <h3 className="font-semibold text-gray-800 dark:text-white">{title}</h3>
-          <div className="flex justify-between items-center mt-2">
-            {price && (
-              <p className="font-bold text-primary-600">${price.toFixed(2)}</p>
-            )}
-            <div className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-yellow-400"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                />
-              </svg>
-              <span className="text-xs ml-1 text-gray-600 dark:text-gray-300">
-                {rating}
-              </span>
+              <span className="text-4xl">{emoji}</span>
             </div>
-          </div>
-          <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-            <span>{cookTime}</span>
-            <span>{calories} cal</span>
-          </div>
+          )}
         </div>
-      </Link>
-    </div>
+        
+        <h3 className="font-semibold text-lg mb-2 text-gray-800">{title}</h3>
+        
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+          {cookTime && (
+            <span className="flex items-center">
+              ⏱️ {typeof cookTime === 'number' ? `${cookTime} min` : cookTime}
+            </span>
+          )}
+          {calories && (
+            <span className="flex items-center">
+              🔥 {calories} cal
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            {rating && (
+              <span className="text-yellow-400 mr-1">
+                ⭐ {rating.toFixed(1)}
+              </span>
+            )}
+            {difficulty && (
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">
+                {difficulty}
+              </span>
+            )}
+          </div>
+          {price && (
+            <span className="font-semibold text-primary">${price}</span>
+          )}
+        </div>
+      </div>
+    </Link>
   );
 };
 

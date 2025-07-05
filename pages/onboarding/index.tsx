@@ -7,7 +7,11 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function Onboarding() {
   const router = useRouter();
-  const { questions, handleComplete } = useSwipeQuiz();
+  const { 
+    currentQuestion, 
+    isComplete, 
+    nextStep
+  } = useSwipeQuiz();
   const { user } = useAuth();
 
   React.useEffect(() => {
@@ -17,9 +21,17 @@ export default function Onboarding() {
     }
   }, [user, router]);
 
-  const onQuizComplete = async (answers) => {
-    await handleComplete(answers);
-    router.push('/');
+  React.useEffect(() => {
+    // If quiz is complete, redirect to home
+    if (isComplete) {
+      router.push('/');
+    }
+  }, [isComplete, router]);
+
+  const onQuizComplete = async () => {
+    // The quiz completion is handled by the hook
+    // We just need to trigger the next step
+    nextStep();
   };
 
   return (
@@ -33,12 +45,12 @@ export default function Onboarding() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Welcome to CookEase</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Let's personalize your experience by understanding your preferences
+            Let&apos;s personalize your experience by understanding your preferences
           </p>
         </div>
 
         <SwipeQuiz 
-          questions={questions} 
+          questions={currentQuestion ? [currentQuestion] : []} 
           onComplete={onQuizComplete} 
         />
       </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, ReactNode } from "react";
 
 interface User {
   id: string;
@@ -21,6 +21,7 @@ interface AuthContextType {
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUserPreferences: (preferences: User["preferences"]) => Promise<void>;
+  setError: (error: string | null) => void;
 }
 
 // Create context with default values
@@ -32,52 +33,105 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => {},
   logout: () => {},
   updateUserPreferences: async () => {},
+  setError: () => {},
 });
 
-// Mock authentication functions (would be replaced with real API calls)
-const mockLogin = async (email: string, password: string): Promise<User> => {
-  // Simulate API call
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email === "user@example.com" && password === "password") {
-        resolve({
-          id: "1",
-          name: "Test User",
-          email: "user@example.com",
-          preferences: {
-            dietaryRestrictions: ["vegetarian"],
-            allergies: ["peanuts"],
-            cuisinePreferences: ["italian", "mexican"],
-            skillLevel: "intermediate",
-            mealTypes: ["dinner", "lunch"],
-          },
-        });
-      } else {
-        reject(new Error("Invalid credentials"));
-      }
-    }, 1000);
+// Real API functions
+const apiLogin = async (email: string, password: string): Promise<User> => {
+  const response = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
   });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Login failed');
+  }
+
+  const data = await response.json();
+  
+  // Store token in localStorage
+  if (data.token) {
+    localStorage.setItem('authToken', data.token);
+  }
+  
+  return {
+    id: data.user.id,
+    name: data.user.name,
+    email: data.user.email,
+    preferences: {
+      dietaryRestrictions: JSON.parse(data.user.dietaryRestrictions || '[]'),
+      allergies: JSON.parse(data.user.allergies || '[]'),
+      cuisinePreferences: JSON.parse(data.user.cuisinePreferences || '[]'),
+      skillLevel: data.user.skillLevel,
+    },
+  };
 };
 
-const mockSignup = async (
-  name: string,
-  email: string,
-  password: string
-): Promise<User> => {
-  // Simulate API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: "2",
-        name,
-        email,
-        preferences: {},
-      });
-    }, 1000);
+const apiSignup = async (name: string, email: string, password: string): Promise<User> => {
+  const response = await fetch('/api/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, email, password }),
   });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Signup failed');
+  }
+
+  const data = await response.json();
+  
+  // Store token in localStorage
+  if (data.token) {
+    localStorage.setItem('authToken', data.token);
+  }
+  
+  return {
+    id: data.user.id,
+    name: data.user.name,
+    email: data.user.email,
+    preferences: {
+      dietaryRestrictions: JSON.parse(data.user.dietaryRestrictions || '[]'),
+      allergies: JSON.parse(data.user.allergies || '[]'),
+      cuisinePreferences: JSON.parse(data.user.cuisinePreferences || '[]'),
+      skillLevel: data.user.skillLevel,
+    },
+  };
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+const apiUpdatePreferences = async (preferences: User["preferences"]): Promise<void> => {
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  const response = await fetch('/api/auth/preferences', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      dietaryRestrictions: JSON.stringify(preferences?.dietaryRestrictions || []),
+      allergies: JSON.stringify(preferences?.allergies || []),
+      cuisinePreferences: JSON.stringify(preferences?.cuisinePreferences || []),
+      skillLevel: preferences?.skillLevel || null,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || 'Failed to update preferences');
+  }
+};
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -85,10 +139,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for saved user in localStorage
+    // Check for saved user and token in localStorage
     const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    const token = localStorage.getItem("authToken");
+    
+    if (savedUser && token) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        console.log("Restored user from localStorage:", parsedUser);
+        setUser(parsedUser);
+      } catch (err) {
+        console.error("Error parsing saved user:", err);
+        localStorage.removeItem("user");
+        localStorage.removeItem("authToken");
+      }
+    } else {
+      console.log("No saved user found in localStorage");
     }
     setLoading(false);
   }, []);
@@ -97,11 +163,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const user = await mockLogin(email, password);
+      console.log("Attempting login for:", email);
+      const user = await apiLogin(email, password);
+      console.log("Login successful, user:", user);
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
+      console.log("User stored in localStorage");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred during login";
+      setError(errorMessage);
+      console.error("Login error:", err);
+      // Re-throw the error so the calling function knows login failed
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -111,11 +184,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     setError(null);
     try {
-      const user = await mockSignup(name, email, password);
+      console.log("Attempting signup for:", name, email);
+      const user = await apiSignup(name, email, password);
+      console.log("Signup successful, user:", user);
       setUser(user);
       localStorage.setItem("user", JSON.stringify(user));
+      console.log("User stored in localStorage after signup");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred during signup";
+      setError(errorMessage);
+      console.error("Signup error:", err);
+      // Re-throw the error so the calling function knows signup failed
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -124,13 +204,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("authToken");
   };
 
   const updateUserPreferences = async (preferences: User["preferences"]) => {
     setLoading(true);
+    setError(null);
     try {
-      // In a real app, this would call an API
-      // For now, we'll just update the local state
+      await apiUpdatePreferences(preferences);
+      
+      // Update local user state
       if (user) {
         const updatedUser = {
           ...user,
@@ -143,15 +226,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         localStorage.setItem("user", JSON.stringify(updatedUser));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "An error occurred updating preferences");
+      console.error("Update preferences error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
+  return React.createElement(
+    AuthContext.Provider,
+    {
+      value: {
         user,
         loading,
         error,
@@ -159,10 +244,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         signup,
         logout,
         updateUserPreferences,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+        setError,
+      },
+    },
+    children
   );
 };
 

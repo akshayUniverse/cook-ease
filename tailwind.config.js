@@ -1,24 +1,29 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./pages/**/*.{js,ts,jsx,tsx}",
-    "./components/**/*.{js,ts,jsx,tsx}"
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
+      fontFamily: {
+        heading: ["Poppins", "Nunito", "sans-serif"],
+        body: ["Inter", "Roboto", "sans-serif"],
+      },
       colors: {
         primary: {
-          DEFAULT: '#FF6B00', // Main orange color from the design
-          50: '#FFF2E5',
-          100: '#FFE5CC',
-          200: '#FFCC99',
-          300: '#FFB266',
-          400: '#FF9933',
-          500: '#FF8000',
-          600: '#FF6B00', // Primary button color
-          700: '#CC5500',
-          800: '#994000',
-          900: '#662B00'
+          DEFAULT: '#ea580c', // warm orange
+          50: '#fef7ec',
+          100: '#fed7aa',
+          200: '#fdba74',
+          300: '#fb923c',
+          400: '#f97316',
+          500: '#ea580c',
+          600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
         },
         gray: {
           50: '#F9FAFB',
@@ -31,14 +36,27 @@ module.exports = {
           700: '#374151',
           800: '#1F2937',
           900: '#111827'
-        }
-      },
-      fontFamily: {
-        sans: ['Inter', 'Arial', 'sans-serif']
+        },
+        background: {
+          DEFAULT: '#fef7ec', // soft peach background
+          secondary: '#fed7aa',
+        },
       },
       borderRadius: {
         'xl': '1rem',
         '2xl': '1.5rem',
+        '3xl': '2rem',
+      },
+      spacing: {
+        '18': '4.5rem',
+        '88': '22rem',
+      },
+      maxWidth: {
+        '8xl': '88rem',
+        '9xl': '96rem',
+      },
+      screens: {
+        'xs': '475px',
       }
     }
   },
