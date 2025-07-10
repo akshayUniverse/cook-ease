@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CookEase - Personalized Recipe App
 
 ![CookEase Logo](public/favicon.ico)
@@ -22,6 +23,8 @@ CookEase is a personalized recipe and nutrition app that helps users discover re
 
 ## Project Structure
 
+=======
+>>>>>>> f8559a1 (Initial commit from Create Next App)
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
 ## Getting Started

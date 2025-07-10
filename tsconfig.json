@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "es5",
+=======
+    "target": "ES2017",
+>>>>>>> f8559a1 (Initial commit from Create Next App)
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -13,15 +17,22 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+<<<<<<< HEAD
     "plugins": [
       {
         "name": "next"
       }
     ],
+=======
+>>>>>>> f8559a1 (Initial commit from Create Next App)
     "paths": {
       "@/*": ["./*"]
     }
   },
+<<<<<<< HEAD
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+=======
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+>>>>>>> f8559a1 (Initial commit from Create Next App)
   "exclude": ["node_modules"]
 }

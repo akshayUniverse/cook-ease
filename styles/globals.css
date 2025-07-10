@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -41,13 +42,23 @@ html, body {
   --foreground: #171717;
   --primary: #ea580c;
   --primary-foreground: #ffffff;
+=======
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+>>>>>>> f8559a1 (Initial commit from Create Next App)
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+<<<<<<< HEAD
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+=======
+>>>>>>> f8559a1 (Initial commit from Create Next App)
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -56,16 +67,20 @@ html, body {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+<<<<<<< HEAD
     --primary: #f97316;
     --primary-foreground: #ffffff;
   }
   
   html, body {
     background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+=======
+>>>>>>> f8559a1 (Initial commit from Create Next App)
   }
 }
 
 body {
+<<<<<<< HEAD
   @apply font-body text-gray-900;
   color: rgb(var(--foreground-rgb));
   overflow-x: hidden;
@@ -149,4 +164,9 @@ button:focus, input:focus {
   html {
     font-size: 16px;
   }
+=======
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+>>>>>>> f8559a1 (Initial commit from Create Next App)
 }
