@@ -3,7 +3,7 @@ import Link from "next/link";
 
 interface RecipeCardProps {
   id: string;
-  title: string;
+  title?: string;
   image?: string;
   price?: number;
   rating?: number;
@@ -15,8 +15,8 @@ interface RecipeCardProps {
 }
 
 // Function to get emoji and color based on recipe type
-const getRecipeEmoji = (title: string, cuisine?: string, mealType?: string) => {
-  const titleLower = title.toLowerCase();
+const getRecipeEmoji = (title?: string, cuisine?: string, mealType?: string) => {
+  const titleLower = title?.toLowerCase() || '';
   
   // Specific dish emojis
   if (titleLower.includes('pizza')) return '🍕';
@@ -101,10 +101,10 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
         <div className="aspect-square w-full mb-3 rounded-lg overflow-hidden">
           {image && !image.includes('placeholder') ? (
             <img 
-              src={image} 
-              alt={title} 
+            src={image}
+            alt={title || 'Recipe image'}
               className="w-full h-full object-cover"
-            />
+          />
           ) : (
             <div 
               className="w-full h-full flex items-center justify-center"
@@ -115,7 +115,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           )}
         </div>
         
-        <h3 className="font-semibold text-lg mb-2 text-gray-800">{title}</h3>
+        <h3 className="font-semibold text-lg mb-2 text-gray-800">{title || 'Untitled Recipe'}</h3>
         
         <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
           {cookTime && (
@@ -128,7 +128,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
               🔥 {calories} cal
             </span>
           )}
-        </div>
+          </div>
         
         <div className="flex items-center justify-between">
           <div className="flex items-center">

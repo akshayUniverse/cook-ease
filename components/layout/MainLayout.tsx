@@ -11,9 +11,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Mobile Layout (sm and below) */}
       <div className="sm:hidden min-h-screen flex flex-col">
         <div className="flex-1 w-full bg-white/95 rounded-t-3xl mt-8 overflow-hidden">
-          {children}
-        </div>
-        <BottomNav />
+        {children}
+      </div>
+      <BottomNav />
       </div>
 
       {/* Desktop/Tablet Layout (md and above) */}

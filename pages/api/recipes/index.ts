@@ -159,9 +159,11 @@ export default async function handler(
 
       if (search) {
         where.OR = [
-          { title: { contains: search as string, mode: 'insensitive' } },
-          { description: { contains: search as string, mode: 'insensitive' } },
-          { cuisine: { contains: search as string, mode: 'insensitive' } }
+          { title: { contains: search as string } },
+          { description: { contains: search as string } },
+          { cuisine: { contains: search as string } },
+          { ingredients: { contains: search as string } },
+          { tags: { contains: search as string } }
         ];
       }
 

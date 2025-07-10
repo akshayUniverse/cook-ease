@@ -294,9 +294,9 @@ export default function HomeMeal() {
                     >
                       Save ({recipe._count.savedBy})
                     </button>
-                  </div>
-                </div>
-              ))}
+              </div>
+            </div>
+          ))}
             </div>
           )}
         </div>

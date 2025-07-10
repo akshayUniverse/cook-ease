@@ -24,7 +24,7 @@ export default function Onboarding() {
   React.useEffect(() => {
     // If quiz is complete, redirect to home
     if (isComplete) {
-      router.push('/');
+    router.push('/');
     }
   }, [isComplete, router]);
 

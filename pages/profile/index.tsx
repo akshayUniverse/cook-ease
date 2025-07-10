@@ -29,7 +29,7 @@ export default function Profile() {
               Go to Login
             </Link>
           </div>
-        </div>
+      </div>
       </>
     );
   }
@@ -73,8 +73,8 @@ export default function Profile() {
                     <span key={allergy} className="bg-yellow-100 text-yellow-800 rounded-full px-3 py-1 text-xs font-semibold">
                       {allergy}
                     </span>
-                  ))}
-                </div>
+              ))}
+            </div>
               </div>
             )}
             
@@ -86,8 +86,8 @@ export default function Profile() {
                     <span key={cuisine} className="bg-green-100 text-green-800 rounded-full px-3 py-1 text-xs font-semibold">
                       {cuisine}
                     </span>
-                  ))}
-                </div>
+              ))}
+            </div>
               </div>
             )}
             
@@ -109,7 +109,7 @@ export default function Profile() {
                 >
                   Set Preferences
                 </Link>
-              </div>
+            </div>
             )}
           </div>
           

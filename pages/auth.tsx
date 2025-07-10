@@ -192,7 +192,7 @@ export default function AuthPage() {
             className="text-primary text-sm hover:underline"
           >
             {isSignIn ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-          </button>
+            </button>
 
           {/* Demo Credentials (for testing) */}
           <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-600">

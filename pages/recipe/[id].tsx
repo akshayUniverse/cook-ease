@@ -516,7 +516,7 @@ export default function RecipeDetail() {
                         </span>
                       )}
                     </div>
-                  ))}
+              ))}
                 </div>
               </div>
               

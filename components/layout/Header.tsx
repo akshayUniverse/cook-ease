@@ -1,5 +1,6 @@
 import React from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 
 interface HeaderProps {
   title?: string;
@@ -7,6 +8,10 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = () => {
   const { user, logout } = useAuth();
+  const router = useRouter();
+  
+  // Hide search boxes when on search page
+  const isSearchPage = router.pathname === '/search';
 
   return (
     <header className="w-full bg-white shadow-sm border-b border-gray-100">
@@ -78,19 +83,59 @@ const Header: React.FC<HeaderProps> = () => {
           </div>
         </div>
         
-        {/* Search Bar for larger screens */}
-        <div className="hidden lg:flex justify-center mt-4">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Search recipes..."
-              className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors">
-              Search
-            </button>
+        {/* Search Bar for larger screens - Hidden on search page */}
+        {!isSearchPage && (
+          <div className="hidden lg:flex justify-center mt-4">
+            <div className="relative w-full max-w-md">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const searchInput = e.currentTarget.querySelector('input') as HTMLInputElement;
+                if (searchInput.value.trim()) {
+                  window.location.href = `/search?q=${encodeURIComponent(searchInput.value.trim())}`;
+                }
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
+        
+        {/* Mobile Search Bar - Hidden on search page */}
+        {!isSearchPage && (
+          <div className="lg:hidden mt-4 px-4">
+            <div className="relative">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const searchInput = e.currentTarget.querySelector('input') as HTMLInputElement;
+                if (searchInput.value.trim()) {
+                  window.location.href = `/search?q=${encodeURIComponent(searchInput.value.trim())}`;
+                }
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
