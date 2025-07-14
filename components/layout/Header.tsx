@@ -1,12 +1,17 @@
 import React from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 
 interface HeaderProps {
   title?: string;
 }
 
 const Header: React.FC<HeaderProps> = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const router = useRouter();
+  
+  // Hide search boxes when on search page
+  const isSearchPage = router.pathname === '/search';
 
   return (
     <header className="w-full bg-white shadow-sm border-b border-gray-100">
@@ -14,9 +19,12 @@ const Header: React.FC<HeaderProps> = () => {
         <div className="flex items-center justify-between">
           {/* Logo and Title */}
           <div className="flex items-center">
-            <h1 className="text-2xl sm:text-3xl font-heading font-bold text-primary">
+            <button
+              onClick={() => router.push('/home')}
+              className="text-2xl sm:text-3xl font-heading font-bold text-primary hover:text-orange-700 transition-colors cursor-pointer"
+            >
               CookEase
-            </h1>
+            </button>
             <span className="hidden sm:block ml-2 text-sm text-gray-500 tracking-wide">
               Personalized Recipes
             </span>
@@ -26,15 +34,10 @@ const Header: React.FC<HeaderProps> = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                {/* User Info */}
-                <div className="hidden md:flex items-center space-x-2">
-                  <span className="text-sm text-gray-600">Hello, {user.name}</span>
-                </div>
-                
                 {/* Navigation Links */}
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => window.location.href = '/preferences'}
+                    onClick={() => router.push('/preferences')}
                     className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
                   >
                     <span>⚙️</span>
@@ -42,33 +45,44 @@ const Header: React.FC<HeaderProps> = () => {
                   </button>
                   
                   <button
-                    onClick={() => window.location.href = '/library'}
+                    onClick={() => router.push('/library')}
                     className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
                   >
                     <span>📚</span>
                     <span className="hidden sm:inline">Library</span>
                   </button>
                   
+
+                  
                   <button
-                    onClick={() => window.location.href = '/profile'}
+                    onClick={() => router.push('/shopping-list')}
                     className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
                   >
-                    <span>👤</span>
-                    <span className="hidden sm:inline">Profile</span>
+                    <span>🛒</span>
+                    <span className="hidden sm:inline">Shopping List</span>
                   </button>
                   
                   <button
-                    onClick={logout}
-                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                    onClick={() => router.push('/recipe/add')}
+                    className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
                   >
-                    Logout
+                    <span>➕</span>
+                    <span className="hidden sm:inline">Add Recipe</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => router.push('/profile')}
+                    className="flex items-center space-x-1 px-3 py-2 text-sm text-gray-600 hover:text-primary transition-colors"
+                  >
+                    <span>👤</span>
+                    <span className="hidden sm:inline">{user.name?.charAt(0).toUpperCase() || 'U'}</span>
                   </button>
                 </div>
               </>
             ) : (
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => window.location.href = '/auth'}
+                  onClick={() => router.push('/auth')}
                   className="bg-primary hover:bg-orange-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
                 >
                   Login
@@ -78,19 +92,59 @@ const Header: React.FC<HeaderProps> = () => {
           </div>
         </div>
         
-        {/* Search Bar for larger screens */}
-        <div className="hidden lg:flex justify-center mt-4">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Search recipes..."
-              className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            />
-            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors">
-              Search
-            </button>
+        {/* Search Bar for larger screens - Hidden on search page */}
+        {!isSearchPage && (
+          <div className="hidden lg:flex justify-center mt-4">
+            <div className="relative w-full max-w-md">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const searchInput = e.currentTarget.querySelector('input') as HTMLInputElement;
+                if (searchInput.value.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchInput.value.trim())}`);
+                }
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
+        
+        {/* Mobile Search Bar - Hidden on search page */}
+        {!isSearchPage && (
+          <div className="lg:hidden mt-4 px-4">
+            <div className="relative">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const searchInput = e.currentTarget.querySelector('input') as HTMLInputElement;
+                if (searchInput.value.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchInput.value.trim())}`);
+                }
+              }}>
+                <input
+                  type="text"
+                  placeholder="Search recipes..."
+                  className="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-primary text-white rounded-full px-3 py-1 text-sm hover:bg-orange-700 transition-colors"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );

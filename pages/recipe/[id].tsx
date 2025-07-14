@@ -63,6 +63,8 @@ export default function RecipeDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [saveCount, setSaveCount] = useState(0);
   const [servings, setServings] = useState(4);
   const [newComment, setNewComment] = useState('');
   const [newRating, setNewRating] = useState(5);
@@ -101,6 +103,8 @@ export default function RecipeDetail() {
 
       const data = await response.json();
       setRecipe(data);
+      setLikeCount(data._count?.likes || 0);
+      setSaveCount(data._count?.savedBy || 0);
       
       // Fetch user's like/save status if logged in
       if (user) {
@@ -124,7 +128,10 @@ export default function RecipeDetail() {
 
             if (saveResponse.ok) {
               const saveData = await saveResponse.json();
+              console.log('Save status fetched:', saveData.isSaved, 'for recipe:', id);
               setIsSaved(saveData.isSaved);
+            } else {
+              console.error('Failed to fetch save status:', saveResponse.status);
             }
 
             if (commentsResponse.ok) {
@@ -181,8 +188,10 @@ export default function RecipeDetail() {
       console.log('Like API response status:', response.status);
       
       if (response.ok) {
-        setIsLiked(!isLiked);
-        console.log('Like status updated to:', !isLiked);
+        const newLikedState = !isLiked;
+        setIsLiked(newLikedState);
+        setLikeCount(prev => newLikedState ? prev + 1 : prev - 1);
+        console.log('Like status updated to:', newLikedState);
         showSuccessNotification(isLiked ? '💔 Recipe unliked' : '❤️ Recipe liked!');
       } else {
         const error = await response.json();
@@ -197,6 +206,7 @@ export default function RecipeDetail() {
 
   const handleSave = async () => {
     console.log('Save button clicked. User:', user ? 'logged in' : 'not logged in');
+    console.log('Current isSaved state:', isSaved);
     
     if (!user) {
       alert('Please log in to save recipes');
@@ -209,7 +219,7 @@ export default function RecipeDetail() {
       if (!token) return;
 
       const method = isSaved ? 'DELETE' : 'POST';
-      console.log('Save API call - Method:', method, 'Recipe ID:', id);
+      console.log('Save API call - Method:', method, 'Recipe ID:', id, 'isSaved:', isSaved);
       
       const response = await fetch(`/api/recipes/${id}/save`, {
         method,
@@ -221,13 +231,30 @@ export default function RecipeDetail() {
       console.log('Save API response status:', response.status);
       
       if (response.ok) {
-        setIsSaved(!isSaved);
-        console.log('Save status updated to:', !isSaved);
+        const newSavedState = !isSaved;
+        setIsSaved(newSavedState);
+        setSaveCount(prev => newSavedState ? prev + 1 : prev - 1);
+        console.log('Save status updated from', isSaved, 'to', newSavedState);
         showSuccessNotification(isSaved ? '📋 Recipe removed from library' : '📚 Recipe saved to library!');
       } else {
         const error = await response.json();
         console.error('Save API error:', error);
-        alert(error.error || 'Failed to save recipe');
+        
+        // If the error is "Recipe already saved", update the local state
+        if (error.error === 'Recipe already saved') {
+          console.log('Recipe already saved - updating local state to saved');
+          setIsSaved(true);
+          showSuccessNotification('📚 Recipe is already in your library!');
+        } 
+        // If the error is "Recipe not saved", update the local state
+        else if (error.error === 'Recipe not saved') {
+          console.log('Recipe not saved - updating local state to not saved');
+          setIsSaved(false);
+          showSuccessNotification('📋 Recipe was already removed from library!');
+        }
+        else {
+          alert(error.error || 'Failed to save recipe');
+        }
       }
     } catch (err) {
       console.error('Error saving recipe:', err);
@@ -378,23 +405,25 @@ export default function RecipeDetail() {
                   <div className="absolute top-4 right-4 flex space-x-2">
                     <button
                       onClick={handleLike}
-                      className={`p-3 rounded-full shadow-lg transition-all ${
+                      className={`p-3 rounded-full shadow-lg transition-all flex items-center space-x-2 ${
                         isLiked 
                           ? 'bg-red-500 text-white' 
                           : 'bg-white text-gray-600 hover:bg-red-50'
                       }`}
                     >
-                      ❤️
+                      <span>❤️</span>
+                      <span className="text-sm font-medium">{likeCount}</span>
                     </button>
                     <button
                       onClick={handleSave}
-                      className={`p-3 rounded-full shadow-lg transition-all ${
+                      className={`p-3 rounded-full shadow-lg transition-all flex items-center space-x-2 ${
                         isSaved 
                           ? 'bg-blue-500 text-white' 
                           : 'bg-white text-gray-600 hover:bg-blue-50'
                       }`}
                     >
-                      📚
+                      <span>📚</span>
+                      <span className="text-sm font-medium">{saveCount}</span>
                     </button>
                   </div>
                 </div>
@@ -440,6 +469,15 @@ export default function RecipeDetail() {
                     <div className="text-2xl font-bold text-primary">⭐</div>
                     <div className="text-sm text-gray-600">Rating</div>
                     <div className="font-semibold">{recipe.rating.toFixed(1)}</div>
+                    <div className="mt-1">
+                      <StarRating 
+                        rating={recipe.rating} 
+                        onRatingChange={() => {}} 
+                        size="sm"
+                        showEmoji={false}
+                        showText={false}
+                      />
+                    </div>
                   </div>
                 </div>
                 
@@ -516,7 +554,7 @@ export default function RecipeDetail() {
                         </span>
                       )}
                     </div>
-                  ))}
+              ))}
                 </div>
               </div>
               
@@ -731,6 +769,115 @@ export default function RecipeDetail() {
           </div>
         </div>
       )}
+
+      {/* Comments Section */}
+      <div className="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+          <span className="mr-2">💬</span>
+          Comments & Reviews ({comments.length})
+        </h2>
+
+        {/* Add Comment Form */}
+        {user ? (
+          <div className="mb-8 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-gray-700 mb-4">Add Your Review</h3>
+            
+            {/* Rating */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-2">Rating</label>
+              <div className="flex items-center space-x-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setNewRating(star)}
+                    className={`text-2xl ${
+                      star <= newRating ? 'text-yellow-400' : 'text-gray-300'
+                    } hover:text-yellow-400 transition-colors`}
+                  >
+                    ⭐
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-gray-600">({newRating}/5)</span>
+              </div>
+            </div>
+
+            {/* Comment */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-600 mb-2">Comment</label>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Share your thoughts about this recipe..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                rows={3}
+              />
+            </div>
+
+            <button
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+              className="bg-primary hover:bg-orange-700 text-white px-6 py-2 rounded-full font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Post Review
+            </button>
+          </div>
+        ) : (
+          <div className="mb-8 p-4 bg-blue-50 rounded-lg">
+            <p className="text-blue-800 text-center">
+              <button
+                onClick={() => router.push('/auth')}
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+              >
+                Sign in
+              </button>
+              {' '}to leave a review
+            </p>
+          </div>
+        )}
+
+        {/* Comments List */}
+        <div className="space-y-4">
+          {comments.length === 0 ? (
+            <p className="text-gray-500 text-center py-8">No reviews yet. Be the first to review this recipe!</p>
+          ) : (
+            comments.map((comment) => (
+              <div key={comment.id} className="border-b border-gray-200 pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-bold">
+                      {comment.user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-800">{comment.user.name}</h4>
+                      <p className="text-sm text-gray-500">
+                        {new Date(comment.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  {comment.rating && (
+                    <div className="flex items-center">
+                      <div className="flex">
+                                               {[1, 2, 3, 4, 5].map((star) => (
+                         <span
+                           key={star}
+                           className={`text-lg ${
+                             star <= (comment.rating || 0) ? 'text-yellow-400' : 'text-gray-300'
+                           }`}
+                         >
+                           ⭐
+                         </span>
+                       ))}
+                     </div>
+                     <span className="ml-2 text-sm text-gray-600">({comment.rating || 0}/5)</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-gray-700 mt-2 ml-13">{comment.content}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
     </>
   );
 }

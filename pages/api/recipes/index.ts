@@ -92,6 +92,59 @@ const matchesUserPreferences = (recipe: any, userPreferences: any) => {
   return true;
 };
 
+// Helper function to check if recipe matches ingredient search
+const matchesIngredientSearch = (recipe: any, ingredients: string[]) => {
+  if (!ingredients || ingredients.length === 0) return true;
+  
+  const recipeIngredients = recipe.ingredients.map((ing: any) => 
+    ing.name.toLowerCase()
+  );
+  
+  return ingredients.every((ingredient: string) => 
+    recipeIngredients.some((recipeIng: string) => 
+      recipeIng.includes(ingredient.toLowerCase())
+    )
+  );
+};
+
+// Helper function to check if recipe matches nutrition criteria
+const matchesNutritionCriteria = (recipe: any, nutritionFilters: any) => {
+  if (!nutritionFilters) return true;
+
+  const { 
+    caloriesMin, caloriesMax, 
+    proteinMin, proteinMax, 
+    carbsMin, carbsMax, 
+    fatMin, fatMax 
+  } = nutritionFilters;
+
+  if (caloriesMin !== undefined && recipe.calories < caloriesMin) return false;
+  if (caloriesMax !== undefined && recipe.calories > caloriesMax) return false;
+  if (proteinMin !== undefined && recipe.protein < proteinMin) return false;
+  if (proteinMax !== undefined && recipe.protein > proteinMax) return false;
+  if (carbsMin !== undefined && recipe.carbs < carbsMin) return false;
+  if (carbsMax !== undefined && recipe.carbs > carbsMax) return false;
+  if (fatMin !== undefined && recipe.fat < fatMin) return false;
+  if (fatMax !== undefined && recipe.fat > fatMax) return false;
+
+  return true;
+};
+
+// Helper function to check if recipe matches cook time criteria
+const matchesCookTime = (recipe: any, cookTimeMin?: number, cookTimeMax?: number) => {
+  if (cookTimeMin !== undefined && recipe.cookTime < cookTimeMin) return false;
+  if (cookTimeMax !== undefined && recipe.cookTime > cookTimeMax) return false;
+  return true;
+};
+
+// Helper function to check if recipe matches tags
+const matchesTags = (recipe: any, tags: string[]) => {
+  if (!tags || tags.length === 0) return true;
+  
+  const recipeTags = recipe.tags;
+  return tags.some((tag: string) => recipeTags.includes(tag));
+};
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -105,8 +158,35 @@ export default async function handler(
         search, 
         limit = '20', 
         offset = '0',
-        personalized = 'false'
+        personalized = 'false',
+        // Advanced search parameters
+        ingredients, // comma-separated ingredient list
+        caloriesMin, caloriesMax,
+        proteinMin, proteinMax,
+        carbsMin, carbsMax,
+        fatMin, fatMax,
+        cookTimeMin, cookTimeMax,
+        tags, // comma-separated tag list
+        sortBy = 'newest' // newest, oldest, rating, cookTime, calories
       } = req.query;
+
+      // Parse advanced search parameters
+      const ingredientList = ingredients ? (ingredients as string).split(',').map(s => s.trim()) : [];
+      const tagList = tags ? (tags as string).split(',').map(s => s.trim()) : [];
+      
+      const nutritionFilters = {
+        caloriesMin: caloriesMin ? parseInt(caloriesMin as string) : undefined,
+        caloriesMax: caloriesMax ? parseInt(caloriesMax as string) : undefined,
+        proteinMin: proteinMin ? parseFloat(proteinMin as string) : undefined,
+        proteinMax: proteinMax ? parseFloat(proteinMax as string) : undefined,
+        carbsMin: carbsMin ? parseFloat(carbsMin as string) : undefined,
+        carbsMax: carbsMax ? parseFloat(carbsMax as string) : undefined,
+        fatMin: fatMin ? parseFloat(fatMin as string) : undefined,
+        fatMax: fatMax ? parseFloat(fatMax as string) : undefined,
+      };
+
+      const cookTimeMinNum = cookTimeMin ? parseInt(cookTimeMin as string) : undefined;
+      const cookTimeMaxNum = cookTimeMax ? parseInt(cookTimeMax as string) : undefined;
 
       // Get user preferences if token provided and personalized requested
       let userPreferences: {
@@ -159,10 +239,46 @@ export default async function handler(
 
       if (search) {
         where.OR = [
-          { title: { contains: search as string, mode: 'insensitive' } },
-          { description: { contains: search as string, mode: 'insensitive' } },
-          { cuisine: { contains: search as string, mode: 'insensitive' } }
+          { title: { contains: search as string } },
+          { description: { contains: search as string } },
+          { cuisine: { contains: search as string } },
+          { ingredients: { contains: search as string } },
+          { tags: { contains: search as string } }
         ];
+      }
+
+      // Add nutrition-based database filtering where possible
+      if (nutritionFilters.caloriesMin !== undefined) {
+        where.calories = { ...where.calories, gte: nutritionFilters.caloriesMin };
+      }
+      if (nutritionFilters.caloriesMax !== undefined) {
+        where.calories = { ...where.calories, lte: nutritionFilters.caloriesMax };
+      }
+      if (nutritionFilters.proteinMin !== undefined) {
+        where.protein = { ...where.protein, gte: nutritionFilters.proteinMin };
+      }
+      if (nutritionFilters.proteinMax !== undefined) {
+        where.protein = { ...where.protein, lte: nutritionFilters.proteinMax };
+      }
+      if (nutritionFilters.carbsMin !== undefined) {
+        where.carbs = { ...where.carbs, gte: nutritionFilters.carbsMin };
+      }
+      if (nutritionFilters.carbsMax !== undefined) {
+        where.carbs = { ...where.carbs, lte: nutritionFilters.carbsMax };
+      }
+      if (nutritionFilters.fatMin !== undefined) {
+        where.fat = { ...where.fat, gte: nutritionFilters.fatMin };
+      }
+      if (nutritionFilters.fatMax !== undefined) {
+        where.fat = { ...where.fat, lte: nutritionFilters.fatMax };
+      }
+
+      // Add cook time filtering
+      if (cookTimeMinNum !== undefined) {
+        where.cookTime = { ...where.cookTime, gte: cookTimeMinNum };
+      }
+      if (cookTimeMaxNum !== undefined) {
+        where.cookTime = { ...where.cookTime, lte: cookTimeMaxNum };
       }
 
       // If user has cuisine preferences and no specific cuisine is being filtered, prefer user's preferred cuisines
@@ -171,6 +287,27 @@ export default async function handler(
           ...(where.OR || []),
           { cuisine: { in: userPreferences.cuisinePreferences } }
         ];
+      }
+
+      // Determine sorting
+      let orderBy: any = { createdAt: 'desc' }; // default
+      
+      switch (sortBy) {
+        case 'oldest':
+          orderBy = { createdAt: 'asc' };
+          break;
+        case 'cookTime':
+          orderBy = { cookTime: 'asc' };
+          break;
+        case 'calories':
+          orderBy = { calories: 'asc' };
+          break;
+        case 'rating':
+          // For now, sort by recipe creation date (later we can add actual rating field)
+          orderBy = { createdAt: 'desc' };
+          break;
+        default:
+          orderBy = { createdAt: 'desc' };
       }
 
       const recipes = await prisma.recipe.findMany({
@@ -190,15 +327,8 @@ export default async function handler(
             }
           }
         },
-        orderBy: (userPreferences && userPreferences.cuisinePreferences && userPreferences.cuisinePreferences.length > 0) ? [
-          { 
-            cuisine: userPreferences.cuisinePreferences.includes('italian') ? 'asc' : 'desc' 
-          },
-          { createdAt: 'desc' }
-        ] : {
-          createdAt: 'desc'
-        },
-        take: parseInt(limit as string) * 2, // Get more to filter down
+        orderBy,
+        take: parseInt(limit as string) * 3, // Get more to filter down with advanced criteria
         skip: parseInt(offset as string)
       });
 
@@ -215,12 +345,25 @@ export default async function handler(
                recipe.difficulty === 'hard' ? '🔧 Skill' : '🌍 Adventure'
       }));
 
-      // Apply user preference filtering
-      if (userPreferences) {
-        recipesWithParsedData = recipesWithParsedData.filter((recipe: any) => 
-          matchesUserPreferences(recipe, userPreferences)
-        );
-      }
+      // Apply advanced filtering
+      recipesWithParsedData = recipesWithParsedData.filter((recipe: any) => {
+        // Check ingredient matching
+        if (!matchesIngredientSearch(recipe, ingredientList)) return false;
+        
+        // Check nutrition criteria (additional client-side filtering for precision)
+        if (!matchesNutritionCriteria(recipe, nutritionFilters)) return false;
+        
+        // Check cook time
+        if (!matchesCookTime(recipe, cookTimeMinNum, cookTimeMaxNum)) return false;
+        
+        // Check tags
+        if (!matchesTags(recipe, tagList)) return false;
+        
+        // Check user preferences
+        if (!matchesUserPreferences(recipe, userPreferences)) return false;
+        
+        return true;
+      });
 
       // Limit to requested amount after filtering
       recipesWithParsedData = recipesWithParsedData.slice(0, parseInt(limit as string));
@@ -228,7 +371,10 @@ export default async function handler(
       res.status(200).json({
         recipes: recipesWithParsedData,
         total: recipesWithParsedData.length,
-        personalized: !!userPreferences
+        personalized: !!userPreferences,
+        hasAdvancedFilters: !!(ingredientList.length > 0 || tagList.length > 0 || 
+          Object.values(nutritionFilters).some(v => v !== undefined) || 
+          cookTimeMinNum !== undefined || cookTimeMaxNum !== undefined)
       });
 
     } catch (error) {
@@ -237,8 +383,17 @@ export default async function handler(
     }
   } 
   else if (req.method === 'POST') {
-    // Create new recipe (for future use)
+    // Create new recipe - requires authentication
     try {
+      // Verify authentication for recipe creation
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'Authentication required to create recipes' });
+      }
+
+      const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as { userId: string };
+      const userId = decoded.userId;
+
       const {
         title,
         description,
@@ -254,28 +409,42 @@ export default async function handler(
         fat,
         ingredients,
         instructions,
-        tags,
-        authorId
+        tags
       } = req.body;
+
+      // Validate required fields
+      if (!title || !description) {
+        return res.status(400).json({ message: 'Title and description are required' });
+      }
+
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: 'At least one ingredient is required' });
+      }
+
+      if (!instructions || !Array.isArray(instructions) || instructions.length === 0) {
+        return res.status(400).json({ message: 'At least one instruction is required' });
+      }
+
+      console.log('Creating recipe by user:', userId);
 
       const recipe = await prisma.recipe.create({
         data: {
-          title,
-          description,
-          image,
-          cookTime: parseInt(cookTime),
-          servings: parseInt(servings),
+          title: title.trim(),
+          description: description.trim(),
+          image: image || `/images/dishes/default-recipe.jpg`,
+          cookTime: parseInt(cookTime) || 30,
+          servings: parseInt(servings) || 4,
           difficulty,
           cuisine,
           mealType,
-          calories: parseInt(calories),
-          protein: parseFloat(protein),
-          carbs: parseFloat(carbs),
-          fat: parseFloat(fat),
+          calories: parseInt(calories) || 400,
+          protein: parseFloat(protein) || 20,
+          carbs: parseFloat(carbs) || 45,
+          fat: parseFloat(fat) || 15,
           ingredients: JSON.stringify(ingredients),
           instructions: JSON.stringify(instructions),
-          tags: JSON.stringify(tags),
-          authorId
+          tags: JSON.stringify(tags || []),
+          authorId: userId
         },
         include: {
           author: {
@@ -283,14 +452,35 @@ export default async function handler(
               name: true,
               id: true
             }
+          },
+          _count: {
+            select: {
+              likes: true,
+              savedBy: true,
+              comments: true
+            }
           }
         }
       });
 
-      res.status(201).json(recipe);
+      console.log('Recipe created successfully:', recipe.id);
+
+      // Transform the response to match frontend expectations
+      const transformedRecipe = {
+        ...recipe,
+        ingredients: JSON.parse(recipe.ingredients),
+        instructions: JSON.parse(recipe.instructions),
+        tags: JSON.parse(recipe.tags),
+        rating: 4.5 // Default rating for new recipes
+      };
+
+      res.status(201).json(transformedRecipe);
 
     } catch (error) {
       console.error('Error creating recipe:', error);
+      if (error instanceof jwt.JsonWebTokenError) {
+        return res.status(401).json({ message: 'Invalid authentication token' });
+      }
       res.status(500).json({ message: 'Internal server error' });
     }
   } 
