@@ -3,6 +3,7 @@ import Head from "next/head";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import Header from '@/components/layout/Header';
+import BottomNav from '@/components/layout/BottomNav';
 import { useRouter } from 'next/router';
 
 interface UserRecipe {
@@ -104,8 +105,8 @@ export default function Profile() {
   return (
     <>
       <Head>
-        <title>Profile | CookEase</title>
-        <meta name="description" content="Your CookEase profile" />
+        <title>Profile | FoodToday</title>
+        <meta name="description" content="Your FoodToday profile" />
       </Head>
       <Header />
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -141,19 +142,49 @@ export default function Profile() {
                 </div>
               )}
               
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+              {/* Profile Navigation */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <Link 
-                  href="/recipe/add" 
-                  className="px-4 py-2 bg-primary text-white rounded-full hover:bg-orange-700 transition-colors text-sm"
+                  href="/library" 
+                  className="flex items-center space-x-3 p-4 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors group"
                 >
-                  + Add Recipe
+                  <span className="text-2xl group-hover:scale-110 transition-transform">📚</span>
+                  <div>
+                    <div className="font-semibold text-blue-800">My Library</div>
+                    <div className="text-sm text-blue-600">Saved recipes & favorites</div>
+                  </div>
                 </Link>
+
                 <Link 
                   href="/preferences" 
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-full hover:bg-gray-300 transition-colors text-sm"
+                  className="flex items-center space-x-3 p-4 bg-green-50 hover:bg-green-100 rounded-xl transition-colors group"
                 >
-                  Edit Profile
+                  <span className="text-2xl group-hover:scale-110 transition-transform">⚙️</span>
+                  <div>
+                    <div className="font-semibold text-green-800">Preferences</div>
+                    <div className="text-sm text-green-600">Diet & cooking settings</div>
+                  </div>
                 </Link>
+
+                <Link 
+                  href="/recipe/add" 
+                  className="flex items-center space-x-3 p-4 bg-orange-50 hover:bg-orange-100 rounded-xl transition-colors group"
+                >
+                  <span className="text-2xl group-hover:scale-110 transition-transform">➕</span>
+                  <div>
+                    <div className="font-semibold text-orange-800">Add Recipe</div>
+                    <div className="text-sm text-orange-600">Share your creation</div>
+                  </div>
+                </Link>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                <button
+                  onClick={() => logout()}
+                  className="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors text-sm"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
@@ -320,6 +351,7 @@ export default function Profile() {
           </button>
         </div>
       </div>
+      <BottomNav />
     </>
   );
 }

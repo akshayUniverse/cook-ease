@@ -37,7 +37,7 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Head>
-        <title>Welcome to CookEase</title>
+        <title>Welcome to FoodToday</title>
         <meta name="description" content="Set up your preferences" />
       </Head>
 

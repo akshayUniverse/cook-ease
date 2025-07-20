@@ -57,7 +57,7 @@ export default async function handler(
     // Generate JWT token
     const token = jwt.sign(
       { userId: user.id },
-      process.env.NEXTAUTH_SECRET || 'fallback-secret',
+      process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production',
       { expiresIn: '7d' }
     );
 

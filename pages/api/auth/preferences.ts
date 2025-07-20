@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 // Helper function to verify JWT token
 const verifyToken = (token: string) => {
   try {
-    return jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret');
+    return jwt.verify(token, process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
   } catch (error) {
     return null;
   }

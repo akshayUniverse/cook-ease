@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import type { AppProps } from 'next/app';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import '../styles/globals.css';
 import { AuthProvider } from '../hooks/useAuth';
+import { TranslationProvider } from '../contexts/TranslationContext';
 import { getPWAManager } from '../utils/pwa';
 
 // PWA Install Button Component
@@ -136,11 +138,18 @@ export default function App({ Component, pageProps }: AppProps) {
   }, []);
 
   return (
-    <AuthProvider>
-      <Component {...pageProps} />
-      <PWAInstallButton />
-      <PWAStatus />
-      <OfflineIndicator />
-    </AuthProvider>
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+      </Head>
+    <TranslationProvider>
+      <AuthProvider>
+        <Component {...pageProps} />
+        <PWAInstallButton />
+        <PWAStatus />
+        <OfflineIndicator />
+      </AuthProvider>
+    </TranslationProvider>
+    </>
   );
 }

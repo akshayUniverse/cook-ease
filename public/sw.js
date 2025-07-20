@@ -79,8 +79,12 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   
-  // Handle API requests
+  // Handle API requests - Skip in development mode
   if (url.pathname.startsWith('/api/')) {
+    // In development, let API requests go directly to server
+    if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+      return; // Don't intercept, let it go to the network
+    }
     event.respondWith(handleApiRequest(event.request));
     return;
   }

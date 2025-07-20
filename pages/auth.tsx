@@ -38,7 +38,14 @@ export default function AuthPage() {
         setSuccess("Login successful! Redirecting...");
         // Small delay to show success message and ensure state is updated
         setTimeout(() => {
-          router.push('/home');
+          // Check if there's a redirect URL from the requireAuth
+          const redirectUrl = sessionStorage.getItem('redirect_after_login');
+          if (redirectUrl) {
+            sessionStorage.removeItem('redirect_after_login');
+            router.push(redirectUrl);
+          } else {
+            router.push('/home');
+          }
         }, 1500);
       } else {
         console.log("Attempting signup...");
@@ -47,7 +54,14 @@ export default function AuthPage() {
         setSuccess("Account created successfully! Redirecting...");
         // Small delay to show success message and ensure state is updated
         setTimeout(() => {
-          router.push('/home');
+          // Check if there's a redirect URL from the requireAuth
+          const redirectUrl = sessionStorage.getItem('redirect_after_login');
+          if (redirectUrl) {
+            sessionStorage.removeItem('redirect_after_login');
+            router.push(redirectUrl);
+          } else {
+            router.push('/home');
+          }
         }, 1500);
       }
     } catch (err) {
@@ -192,13 +206,7 @@ export default function AuthPage() {
             className="text-primary text-sm hover:underline"
           >
             {isSignIn ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
-            </button>
-
-          {/* Demo Credentials (for testing) */}
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg text-xs text-blue-600">
-            <p className="font-semibold mb-1">For testing:</p>
-            <p>Create a new account or use any email/password</p>
-          </div>
+          </button>
         </div>
       </div>
     </>

@@ -8,11 +8,11 @@ export default function Document() {
         <link rel="manifest" href="/manifest.json" />
         
         {/* PWA Meta Tags */}
-        <meta name="application-name" content="CookEase" />
+        <meta name="application-name" content="FoodToday" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="CookEase" />
-        <meta name="description" content="Discover personalized recipes, search by ingredients, and save your favorites with CookEase - your smart cooking companion." />
+        <meta name="apple-mobile-web-app-title" content="FoodToday" />
+        <meta name="description" content="Discover personalized recipes, search by ingredients, and save your favorites with FoodToday - your smart cooking companion." />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-config" content="/icons/browserconfig.xml" />
@@ -77,9 +77,6 @@ export default function Document() {
         <meta name="author" content="CookEase Team" />
         <meta name="robots" content="index, follow" />
         <meta name="googlebot" content="index, follow" />
-        
-        {/* Viewport Meta Tag (moved from _app.tsx for better performance) */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
       </Head>
       <body>
         <Main />

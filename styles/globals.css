@@ -23,7 +23,7 @@ html, body {
   width: 100vw;
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #fef7ec 0%, #fed7aa 100%);
+  background: rgb(255, 255, 255);
   background-attachment: fixed;
   background-repeat: no-repeat;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
@@ -54,14 +54,14 @@ html, body {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --primary: #f97316;
+    --background: #ffffff;
+    --foreground: #171717;
+    --primary: #ea580c;
     --primary-foreground: #ffffff;
   }
   
   html, body {
-    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    background: rgb(255, 255, 255);
   }
 }
 

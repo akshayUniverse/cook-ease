@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from '@/components/layout/Header';
+import BottomNav from '@/components/layout/BottomNav';
 import RecipeCard from '@/components/recipe/RecipeCard';
 import { useAuth } from '@/hooks/useAuth';
 import SuccessNotification from '@/components/common/SuccessNotification';
@@ -28,6 +29,11 @@ export default function SearchPage() {
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false);
   const [currentSearchFilters, setCurrentSearchFilters] = useState<SearchFilters | null>(null);
   const [hasAdvancedFilters, setHasAdvancedFilters] = useState(false);
+  
+  // Pagination state
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [hasMoreResults, setHasMoreResults] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   // Single input state for all search functionality
   const [searchInput, setSearchInput] = useState('');
@@ -202,7 +208,10 @@ export default function SearchPage() {
         if (filters.cookTimeMax !== undefined) queryParams.append('cookTimeMax', filters.cookTimeMax.toString());
         if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
         
-        queryParams.append('limit', '24');
+        // For ingredient search, start with 10, then load more
+        const limit = searchMode === 'ingredients' ? '10' : '24';
+        queryParams.append('limit', limit);
+        queryParams.append('offset', '0'); // Reset offset for new search
         queryParams.append('personalized', user ? 'true' : 'false');
         
         const apiUrl = `/api/recipes?${queryParams.toString()}`;
@@ -216,8 +225,13 @@ export default function SearchPage() {
         
         const data = await response.json();
         setRecipes(data.recipes || []);
-        setTotalCount(data.totalCount || 0);
+        setTotalCount(data.total || data.totalCount || 0);
         setHasAdvancedFilters(data.hasAdvancedFilters || false);
+        
+        // Set pagination state
+        setCurrentOffset(10); // Next offset for "View More"
+        const recipesReceived = data.recipes ? data.recipes.length : 0;
+        setHasMoreResults(recipesReceived >= 10 && (data.total || data.totalCount || 0) > recipesReceived);
       }
       
     } catch (err) {
@@ -226,6 +240,62 @@ export default function SearchPage() {
       setLoading(false);
     }
   }, [filters, isLibraryMode, searchMode, user]);
+
+  // Load more results for pagination
+  const loadMoreResults = useCallback(async () => {
+    if (loadingMore || !hasMoreResults) return;
+    
+    setLoadingMore(true);
+    
+    try {
+      const token = localStorage.getItem('authToken');
+      const headers: any = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const queryParams = new URLSearchParams();
+      
+      if (filters.search) queryParams.append('search', filters.search);
+      if (filters.cuisine && filters.cuisine !== 'all') queryParams.append('cuisine', filters.cuisine);
+      if (filters.mealType && filters.mealType !== 'all') queryParams.append('mealType', filters.mealType);
+      if (filters.difficulty && filters.difficulty !== 'all') queryParams.append('difficulty', filters.difficulty);
+      if (filters.ingredients) queryParams.append('ingredients', filters.ingredients);
+      if (filters.tags) queryParams.append('tags', filters.tags);
+      
+      queryParams.append('limit', '10');
+      queryParams.append('offset', currentOffset.toString());
+      queryParams.append('personalized', user ? 'true' : 'false');
+      
+      const apiUrl = `/api/recipes?${queryParams.toString()}`;
+      console.log('Loading more results:', apiUrl);
+      
+      const response = await fetch(apiUrl, { headers });
+      
+      if (!response.ok) {
+        throw new Error('Failed to load more recipes');
+      }
+      
+      const data = await response.json();
+      const newRecipes = data.recipes || [];
+      
+      // Append new recipes to existing ones
+      setRecipes(prevRecipes => [...prevRecipes, ...newRecipes]);
+      
+      // Update pagination state
+      const newOffset = currentOffset + 10;
+      setCurrentOffset(newOffset);
+      setHasMoreResults(newRecipes.length >= 10 && (data.total || 0) > (recipes.length + newRecipes.length));
+      
+    } catch (error) {
+      console.error('Error loading more results:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [currentOffset, hasMoreResults, loadingMore, filters, user, recipes.length]);
 
   // Handle input changes with debounced search
   useEffect(() => {
@@ -307,6 +377,11 @@ export default function SearchPage() {
     setFilters(newFilters);
     setSearchInput(newFilters.search);
     setSearchMode('ingredients');
+    
+    // Reset pagination for new search
+    setCurrentOffset(0);
+    setHasMoreResults(false);
+    setLoadingMore(false);
     
     // Update URL
     const urlParams = new URLSearchParams();
@@ -679,6 +754,7 @@ export default function SearchPage() {
                     </button>
                   </div>
                 ) : (
+                  <>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {recipes.map((recipe) => (
                       <RecipeCard
@@ -695,12 +771,34 @@ export default function SearchPage() {
                       />
                     ))}
                   </div>
+                    
+                    {/* View More Button for Ingredient Search */}
+                    {searchMode === 'ingredients' && hasMoreResults && (
+                      <div className="text-center mt-8">
+                        <button
+                          onClick={loadMoreResults}
+                          disabled={loadingMore}
+                          className="bg-primary text-white px-8 py-3 rounded-full hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {loadingMore ? (
+                            <>
+                              <div className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Loading more...
+                            </>
+                          ) : (
+                            `View More Recipes (${totalCount - recipes.length} remaining)`
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
           </>
         )}
       </div>
+      <BottomNav />
     </>
   );
 } 

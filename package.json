@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
-    "seed": "npx tsx prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts",
+    "seed-real": "npx tsx prisma/seed-real-data.ts"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",

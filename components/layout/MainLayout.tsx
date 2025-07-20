@@ -7,10 +7,10 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-orange-50 to-orange-100">
+    <div className="min-h-screen w-full bg-white">
       {/* Mobile Layout (sm and below) */}
       <div className="sm:hidden min-h-screen flex flex-col">
-        <div className="flex-1 w-full bg-white/95 rounded-t-3xl mt-8 overflow-hidden">
+        <div className="flex-1 w-full bg-white/95 rounded-t-3xl mt-8 overflow-hidden pb-20">
         {children}
       </div>
       <BottomNav />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useAuth } from '@/hooks/useAuth';
 import Header from '@/components/layout/Header';
+import IngredientSearchForPreferences from '@/components/common/IngredientSearchForPreferences';
 
 const DIETARY_RESTRICTIONS = [
   { id: 'vegetarian', label: 'Vegetarian', emoji: '🥬' },
@@ -54,6 +55,9 @@ export default function Preferences() {
     cuisinePreferences: [] as string[],
     skillLevel: 'beginner' as string
   });
+  
+  // Track additional ingredient preferences locally
+  const [favoriteIngredients, setFavoriteIngredients] = useState<string[]>([]);
 
   // Load user preferences on mount
   useEffect(() => {
@@ -64,6 +68,16 @@ export default function Preferences() {
         cuisinePreferences: user.preferences.cuisinePreferences || [],
         skillLevel: user.preferences.skillLevel || 'beginner'
       });
+      
+      // Load favorite ingredients from localStorage (for now)
+      const savedFavorites = localStorage.getItem(`favorites_${user.id}`);
+      if (savedFavorites) {
+        try {
+          setFavoriteIngredients(JSON.parse(savedFavorites));
+        } catch (error) {
+          console.error('Error parsing favorite ingredients:', error);
+        }
+      }
     }
   }, [user]);
 
@@ -80,6 +94,42 @@ export default function Preferences() {
     }
   };
 
+  // Handle adding ingredients from search to categories
+  const handleAddToCategory = (ingredient: string, category: 'allergies' | 'favorites') => {
+    if (category === 'allergies') {
+      // Add to allergies
+      const normalizedIngredient = ingredient.toLowerCase();
+      if (!formData.allergies.includes(normalizedIngredient)) {
+        setFormData(prev => ({
+          ...prev,
+          allergies: [...prev.allergies, normalizedIngredient]
+        }));
+      }
+    } else if (category === 'favorites') {
+      // Add to favorite ingredients
+      const normalizedIngredient = ingredient.toLowerCase();
+      if (!favoriteIngredients.includes(normalizedIngredient)) {
+        const newFavorites = [...favoriteIngredients, normalizedIngredient];
+        setFavoriteIngredients(newFavorites);
+        
+        // Save to localStorage
+        if (user) {
+          localStorage.setItem(`favorites_${user.id}`, JSON.stringify(newFavorites));
+        }
+      }
+    }
+  };
+
+  // Remove favorite ingredient
+  const removeFavoriteIngredient = (ingredient: string) => {
+    const newFavorites = favoriteIngredients.filter(item => item !== ingredient);
+    setFavoriteIngredients(newFavorites);
+    
+    if (user) {
+      localStorage.setItem(`favorites_${user.id}`, JSON.stringify(newFavorites));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -87,8 +137,29 @@ export default function Preferences() {
 
     try {
       await updateUserPreferences(formData);
+      
+      // Mark that this user has set their preferences
+      if (user) {
+        localStorage.setItem(`preferences_set_${user.id}`, 'true');
+      }
+      
       setMessage('Preferences updated successfully! 🎉');
-      setTimeout(() => setMessage(''), 3000);
+      
+      // If coming from home page (first-time setup), trigger suggestions and redirect back to home
+      const redirectToHome = sessionStorage.getItem('redirect_after_preferences');
+      if (redirectToHome) {
+        sessionStorage.removeItem('redirect_after_preferences');
+        
+        // Set flag to auto-trigger suggestions
+        sessionStorage.setItem('auto_trigger_suggestions', 'true');
+        
+        setMessage('Preferences saved! Redirecting and getting your personalized suggestions...');
+        setTimeout(() => {
+          window.location.href = '/home';
+        }, 2000);
+      } else {
+        setTimeout(() => setMessage(''), 3000);
+      }
     } catch (error) {
       setMessage('Failed to update preferences. Please try again.');
       console.error('Error updating preferences:', error);
@@ -146,7 +217,38 @@ export default function Preferences() {
               </div>
             )}
 
+            {/* Ingredient Search Section */}
+            <IngredientSearchForPreferences
+              onAddToCategory={handleAddToCategory}
+              currentAllergies={formData.allergies}
+              currentFavorites={favoriteIngredients}
+            />
+
             <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Favorite Ingredients Display */}
+              {favoriteIngredients.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">💚 Your Favorite Ingredients</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {favoriteIngredients.map(ingredient => (
+                      <span
+                        key={ingredient}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                      >
+                        {ingredient}
+                        <button
+                          type="button"
+                          onClick={() => removeFavoriteIngredient(ingredient)}
+                          className="ml-2 text-green-600 hover:text-green-800"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Dietary Restrictions */}
               <div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-4">🥗 Dietary Restrictions</h3>
