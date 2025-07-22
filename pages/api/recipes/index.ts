@@ -203,8 +203,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         includeExternal = 'false' // Include external API results for worldwide recipes
       } = req.query;
 
-    let user = null;
-    let userPreferences = null;
+    let user: any = null;
+    let userPreferences: any = null;
 
     // Authentication and user preferences logic (existing code)
     if (personalized === 'true' || suggestions === 'true') {

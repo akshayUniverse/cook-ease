@@ -1,64 +1,116 @@
-# CookEase - Personalized Recipe App
+# 🍽️ FoodToday - Smart Recipe App
 
-![CookEase Logo](public/favicon.ico)
+A modern, multi-language recipe application with personalized suggestions, ingredient-based search, and worldwide recipe discovery.
 
-CookEase is a personalized recipe and nutrition app that helps users discover recipes tailored to their preferences, dietary restrictions, and nutritional goals.
+## ✨ Features
 
-## Features
+- 🌍 **Multi-Language Support** - English and Hindi
+- 🎯 **Personalized Suggestions** - AI-powered recipe recommendations
+- 🔍 **Smart Search** - Search by ingredients, cuisine, or preferences
+- 📱 **PWA Ready** - Install as mobile app
+- 🥗 **Dietary Preferences** - Vegetarian, vegan, allergy filtering
+- 💾 **Save & Like** - Personal recipe library
+- 🛒 **Shopping Lists** - Plan your grocery shopping
+- 🌐 **Worldwide Recipes** - Access to global cuisine
 
-- **Personalized Recipe Recommendations**: Get recipe suggestions based on your preferences and dietary needs
-- **Nutrition Tracking**: View detailed nutritional information for each recipe
-- **Recipe Search**: Find recipes by ingredients, cuisine, or meal type
-- **User Preferences**: Set dietary restrictions, allergies, and cuisine preferences
-- **Responsive Design**: Works on desktop, tablet, and mobile devices
+## 🚀 Quick Start
 
-## Tech Stack
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Git
 
-- **Frontend**: Next.js, React, TypeScript, Tailwind CSS
-- **Styling**: Tailwind CSS, Headless UI
-- **State Management**: React Context API
-- **Authentication**: Custom auth implementation (can be replaced with Auth0)
-- **API Integration**: Recipe and nutrition data APIs
-
-## Project Structure
-
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
-
-## Getting Started
-
-First, run the development server:
-
+### Installation
 ```bash
+# Clone the repository
+git clone <your-repo-url>
+cd cook-ease
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your API keys
+
+# Set up database
+npx prisma db push
+npm run seed-real
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
+- **Backend:** Next.js API Routes, Prisma ORM
+- **Database:** SQLite (dev) / PostgreSQL (prod)
+- **Authentication:** JWT
+- **External APIs:** TheMealDB, Spoonacular, Pexels, Unsplash
+- **Deployment:** Vercel
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## 📱 PWA Features
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Offline functionality
+- App-like experience
+- Install prompt
+- Push notifications (coming soon)
 
-## Learn More
+## 🌍 Multi-Language
 
-To learn more about Next.js, take a look at the following resources:
+Currently supports:
+- 🇺🇸 English
+- 🇮🇳 हिन्दी (Hindi)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn-pages-router) - an interactive Next.js tutorial.
+More languages coming soon!
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Deployment
 
-## Deploy on Vercel
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Quick Deploy to Vercel:
+```bash
+npm i -g vercel
+vercel login
+vercel
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+## 📁 Project Structure
+
+See [PROJECT_ARCHITECTURE.md](./PROJECT_ARCHITECTURE.md) for detailed architecture documentation.
+
+## 🔧 Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run seed` - Seed database with sample data
+- `npm run seed-real` - Seed database with real API data
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [TheMealDB](https://www.themealdb.com/) for recipe data
+- [Spoonacular](https://spoonacular.com/) for nutrition information
+- [Pexels](https://pexels.com/) and [Unsplash](https://unsplash.com/) for images
+- [Vercel](https://vercel.com/) for hosting
+- [Prisma](https://prisma.io/) for database management
+
+---
+
+**Made with ❤️ for food lovers around the world!**

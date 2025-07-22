@@ -275,7 +275,7 @@ export class NotificationService {
   }
 
   public clearCompletedTimers(): void {
-    for (const [id, timer] of this.timers) {
+    for (const [id, timer] of this.timers.entries()) {
       if (timer.isCompleted) {
         this.timers.delete(id);
       }
