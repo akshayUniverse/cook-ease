@@ -15,7 +15,7 @@ export default async function handler(
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production') as { userId: string };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production') as { userId: string };
     const userId = decoded.userId;
 
     if (req.method === 'GET') {

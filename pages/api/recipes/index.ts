@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
 // Helper function to verify JWT token
 const verifyToken = (token: string) => {
   try {
-    return jwt.verify(token, process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
+    return jwt.verify(token, process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
   } catch (error) {
     return null;
   }
@@ -219,9 +219,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (token) {
         try {
           // Verify JWT token
-          const jwtSecret = process.env.NEXTAUTH_SECRET;
+          const jwtSecret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
           if (!jwtSecret) {
-            console.error('❌ NEXTAUTH_SECRET is not defined');
+            console.error('❌ JWT_SECRET or NEXTAUTH_SECRET is not defined');
             return res.status(500).json({ error: 'Server configuration error' });
           }
           
