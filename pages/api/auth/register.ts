@@ -2,10 +2,53 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { corsMiddleware } from '../../../utils/cors';
 
 const prisma = new PrismaClient();
 
-export default async function handler(
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: User registration
+ *     description: Create a new user account
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/RegisterRequest'
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "User created successfully"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *                 token:
+ *                   type: string
+ *                   description: JWT token for authentication
+ *       400:
+ *         description: Missing required fields or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -71,4 +114,6 @@ export default async function handler(
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}
+
+export default corsMiddleware(handler); 

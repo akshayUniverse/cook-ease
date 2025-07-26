@@ -88,6 +88,19 @@ const Header: React.FC<HeaderProps> = () => {
                     <span className="text-sm">🧹</span>
                   </button>
                 )}
+                
+                {/* API Documentation Link - Only in development */}
+                {process.env.NODE_ENV === 'development' && (
+                  <a
+                    href="/api-docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 text-gray-600 hover:text-primary transition-colors"
+                    title="API Documentation"
+                  >
+                    <span className="text-lg">📚</span>
+                  </a>
+                )}
               </>
             ) : (
               <div className="flex items-center space-x-2">

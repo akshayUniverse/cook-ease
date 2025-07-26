@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { corsMiddleware } from '../../../utils/cors';
 
 const prisma = new PrismaClient();
 
@@ -13,7 +14,54 @@ const verifyToken = (token: string) => {
   }
 };
 
-export default async function handler(
+/**
+ * @swagger
+ * /auth/preferences:
+ *   put:
+ *     summary: Update user preferences
+ *     description: Update user dietary restrictions, allergies, cuisine preferences, and skill level
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PreferencesRequest'
+ *     responses:
+ *       200:
+ *         description: Preferences updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Preferences updated successfully"
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       405:
+ *         description: Method not allowed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
@@ -64,4 +112,6 @@ export default async function handler(
     console.error('Update preferences error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-} 
+}
+
+export default corsMiddleware(handler); 

@@ -2,6 +2,34 @@
 const nextConfig = {
   reactStrictMode: false,
   
+  // Add CORS headers for API routes
+  async headers() {
+    return [
+      {
+        // Apply these headers to all API routes
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*', // In production, you might want to restrict this
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-Requested-With',
+          },
+          {
+            key: 'Access-Control-Allow-Credentials',
+            value: 'true',
+          },
+        ],
+      },
+    ];
+  },
+  
   images: {
     domains: ['images.unsplash.com', 'api.pexels.com', 'www.themealdb.com', 'spoonacular.com'],
   },
