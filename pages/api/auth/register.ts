@@ -2,7 +2,6 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { corsMiddleware } from '../../../utils/cors';
 
 const prisma = new PrismaClient();
 
@@ -11,17 +10,33 @@ const prisma = new PrismaClient();
  * /auth/register:
  *   post:
  *     summary: User registration
- *     description: Create a new user account
+ *     description: Register a new user with email, name, and password
  *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/RegisterRequest'
+ *             type: object
+ *             required:
+ *               - email
+ *               - name
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "user@example.com"
+ *               name:
+ *                 type: string
+ *                 example: "John Doe"
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: "password123"
  *     responses:
  *       201:
- *         description: User created successfully
+ *         description: Registration successful
  *         content:
  *           application/json:
  *             schema:
@@ -29,14 +44,20 @@ const prisma = new PrismaClient();
  *               properties:
  *                 message:
  *                   type: string
- *                   example: "User created successfully"
+ *                   example: "Registration successful"
  *                 user:
  *                   $ref: '#/components/schemas/User'
  *                 token:
  *                   type: string
  *                   description: JWT token for authentication
  *       400:
- *         description: Missing required fields or user already exists
+ *         description: Missing required fields or invalid data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       409:
+ *         description: Email already exists
  *         content:
  *           application/json:
  *             schema:
@@ -48,20 +69,38 @@ const prisma = new PrismaClient();
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // Check method
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    const { name, email, password } = req.body;
+    const { email, name, password } = req.body;
 
     // Validate input
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!email || !name || !password) {
+      return res.status(400).json({ message: 'Email, name, and password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
     }
 
     // Check if user already exists
@@ -70,7 +109,7 @@ async function handler(
     });
 
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'Email already registered. Please login instead.' });
     }
 
     // Hash password
@@ -79,12 +118,13 @@ async function handler(
     // Create user
     const user = await prisma.user.create({
       data: {
-        name,
         email,
+        name,
         password: hashedPassword,
-        dietaryRestrictions: "[]",
-        allergies: "[]",
-        cuisinePreferences: "[]",
+        dietaryRestrictions: '[]',
+        allergies: '[]',
+        cuisinePreferences: '[]',
+        skillLevel: 'beginner'
       },
       select: {
         id: true,
@@ -105,7 +145,7 @@ async function handler(
     );
 
     res.status(201).json({
-      message: 'User created successfully',
+      message: 'Registration successful',
       user,
       token
     });
@@ -113,7 +153,7 @@ async function handler(
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    await prisma.$disconnect();
   }
-}
-
-export default corsMiddleware(handler); 
+} 

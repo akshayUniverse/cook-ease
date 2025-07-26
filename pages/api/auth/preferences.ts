@@ -1,25 +1,15 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
-import { corsMiddleware } from '../../../utils/cors';
 
 const prisma = new PrismaClient();
-
-// Helper function to verify JWT token
-const verifyToken = (token: string) => {
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production');
-  } catch (error) {
-    return null;
-  }
-};
 
 /**
  * @swagger
  * /auth/preferences:
- *   put:
+ *   post:
  *     summary: Update user preferences
- *     description: Update user dietary restrictions, allergies, cuisine preferences, and skill level
+ *     description: Update user dietary restrictions, allergies, and cuisine preferences
  *     tags: [Authentication]
  *     security:
  *       - bearerAuth: []
@@ -28,7 +18,27 @@ const verifyToken = (token: string) => {
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/PreferencesRequest'
+ *             type: object
+ *             properties:
+ *               dietaryRestrictions:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["vegetarian", "gluten-free"]
+ *               allergies:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["nuts", "shellfish"]
+ *               cuisinePreferences:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["italian", "mexican"]
+ *               skillLevel:
+ *                 type: string
+ *                 enum: [beginner, intermediate, advanced]
+ *                 example: "intermediate"
  *     responses:
  *       200:
  *         description: Preferences updated successfully
@@ -48,12 +58,6 @@ const verifyToken = (token: string) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Error'
- *       405:
- *         description: Method not allowed
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  *       500:
  *         description: Internal server error
  *         content:
@@ -61,36 +65,52 @@ const verifyToken = (token: string) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== 'PUT') {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
+  // Check method
+  if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    // Verify authentication token
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
+    // Get token from Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Authorization token required' });
     }
 
-    const decoded = verifyToken(token) as { userId: string };
-    if (!decoded) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
+    const token = authHeader.substring(7);
+    const jwtSecret = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+
+    // Verify token
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
+    const userId = decoded.userId;
 
     const { dietaryRestrictions, allergies, cuisinePreferences, skillLevel } = req.body;
 
     // Update user preferences
     const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
+      where: { id: userId },
       data: {
-        dietaryRestrictions: dietaryRestrictions || "[]",
-        allergies: allergies || "[]", 
-        cuisinePreferences: cuisinePreferences || "[]",
-        skillLevel: skillLevel || null,
+        dietaryRestrictions: JSON.stringify(dietaryRestrictions || []),
+        allergies: JSON.stringify(allergies || []),
+        cuisinePreferences: JSON.stringify(cuisinePreferences || []),
+        skillLevel: skillLevel || 'beginner'
       },
       select: {
         id: true,
@@ -109,9 +129,12 @@ async function handler(
     });
 
   } catch (error) {
-    console.error('Update preferences error:', error);
+    console.error('Preferences update error:', error);
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
     res.status(500).json({ message: 'Internal server error' });
+  } finally {
+    await prisma.$disconnect();
   }
-}
-
-export default corsMiddleware(handler); 
+} 
