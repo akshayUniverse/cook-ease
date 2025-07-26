@@ -11,7 +11,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Access-Control-Allow-Origin',
-            value: '*', // In production, you might want to restrict this
+            value: '*',
           },
           {
             key: 'Access-Control-Allow-Methods',
@@ -24,6 +24,10 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Credentials',
             value: 'true',
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
           },
         ],
       },
