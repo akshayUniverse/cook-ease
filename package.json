@@ -16,8 +16,6 @@
     "db:seed": "npm run seed"
   },
   "dependencies": {
-    "@auth0/auth0-react": "^2.2.4",
-    "@auth0/nextjs-auth0": "^3.8.0",
     "@heroicons/react": "^2.2.0",
     "@prisma/client": "^6.11.1",
     "bcryptjs": "^3.0.2",
